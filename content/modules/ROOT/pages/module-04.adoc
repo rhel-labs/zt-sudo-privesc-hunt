@@ -21,7 +21,10 @@ The key question in any security remediation is: "How do we meet the legitimate 
 Sometimes the answer is "deny the request because the risk is too high." But often there's a better way.
 ====
 
-== Option 1: Complete Removal
+.Option 1: Complete Removal
+[%collapsible]
+====
+
 
 The simplest and most secure option is to completely remove the sudo rule. Let's do that first, then discuss alternatives.
 
@@ -58,15 +61,15 @@ sudo -i -u devuser
 sudo -l
 ----
 [NOTE]
-====
+=====
 If you are prompted for devuser's password, enter `SecurePass123!`
-====
+=====
 
 
 [NOTE]
-====
+=====
 You should now see a message indicating that devuser is not allowed to run sudo on this host. The vulnerability is eliminated.
-====
+=====
 
 Exit back to the rhel user:
 
@@ -74,12 +77,16 @@ Exit back to the rhel user:
 ----
 exit
 ----
+====
 
-== Option 2: Better Solutions
+.Option 2: Better Solutions
+[%collapsible]
+====
+
 
 Simply removing access might not satisfy the business requirement. Here are better alternatives:
 
-=== Alternative 1: File Permissions
+*Alternative 1: File Permissions*
 
 Instead of sudo, adjust file permissions so devuser can read the logs
 
@@ -93,7 +100,7 @@ Instead of sudo, adjust file permissions so devuser can read the logs
 * May not work for all log files (some are actively written by root-only processes)
 * User needs to log out and back in for group membership to take effect
 
-=== Alternative 2: Log Viewer Script
+*Alternative 2: Log Viewer Script*
 
 You could write a script which can read the important logs, and the user can then run the script via sudo.  A well written script could avoid the escape scenario that `less` presented.
 
@@ -107,7 +114,7 @@ You could write a script which can read the important logs, and the user can the
 * Less flexible than direct file access
 * Still uses sudo (though much safer)
 
-=== Alternative 3: Read-Only Access via ACLs
+*Alternative 3: Read-Only Access via ACLs*
 
 Similar to the first option, you could use file system ACL's to allow the user read access to the logs that they need. 
 
@@ -121,7 +128,12 @@ Similar to the first option, you could use file system ACL's to allow the user r
 * Permissions may be reset by log rotation
 * Less commonly used, might confuse other admins
 
-== Recommended Solution
+====
+
+.Recommended Solution
+[%collapsible]
+====
+
 
 For most environments, **Alternative 1** (group-based permissions) is the best balance of security and usability:
 
@@ -166,11 +178,11 @@ less /var/log/messages
 ----
 
 [NOTE]
-====
+=====
 You should now be able to read the log file without sudo! Press `q` to quit less.
 
 Notice that even though devuser is using `less`, there's no privilege escalation risk because they're running it as their own user, not as root.
-====
+=====
 
 Exit back to rhel:
 
@@ -178,8 +190,11 @@ Exit back to rhel:
 ----
 exit
 ----
+====
 
-== Verification and Testing
+.Verification and Testing
+[%collapsible]
+====
 
 Let's verify our remediation is complete:
 
@@ -190,9 +205,9 @@ Let's verify our remediation is complete:
 sudo -u devuser sudo -l 2>&1 | head -5
 ----
 [NOTE]
-====
+=====
 If you are prompted for devuser's password, enter `SecurePass123!`
-====
+=====
 
 2. **Confirm log file access works:**
 
@@ -210,12 +225,12 @@ sudo -u devuser sudo whoami 2>&1
 ----
 
 [NOTE]
-====
+=====
 If you are prompted for devuser's password, enter `SecurePass123!`
-====
+=====
 
 [IMPORTANT]
-====
+=====
 **Security Verification Checklist:**
 
 * ✓ Vulnerable sudo rule removed
@@ -223,13 +238,17 @@ If you are prompted for devuser's password, enter `SecurePass123!`
 * ✓ Business need still met (can read logs)
 * ✓ Privilege escalation not possible
 * ✓ Solution uses least privilege principle
+=====
 ====
 
-== Documentation and Reporting
+.Documentation and Reporting
+[%collapsible]
+====
+
 
 In a real incident, you would now document your findings:
 
-=== Incident Report Template
+*Incident Report Template*
 
 [source,text]
 ----
@@ -285,6 +304,7 @@ NEXT STEPS:
 3. Provide security training for managers
 4. Implement automated sudo rule validation
 ----
+====
 
 == Final Thoughts
 

@@ -1,10 +1,12 @@
 = Finding the Misconfiguration
 
-== Investigating Sudo Configuration
+.Investigating Sudo Configuration
+[%collapsible]
+====
 
 Now that we understand the situation, let's investigate the sudo configuration to find exactly what Manager Scott created.
 
-=== Understanding Sudo
+*Understanding Sudo*
 
 The `sudo` command allows permitted users to run commands as the superuser (or another user). The configuration is controlled by:
 
@@ -12,7 +14,7 @@ The `sudo` command allows permitted users to run commands as the superuser (or a
 * `/etc/sudoers.d/` - Directory for modular sudo rules (recommended for custom rules)
 
 [TIP]
-====
+=====
 **Best Practice:**
 
 Adding custom sudo rules to `/etc/sudoers.d/` is preferred over editing `/etc/sudoers` directly because:
@@ -20,9 +22,9 @@ Adding custom sudo rules to `/etc/sudoers.d/` is preferred over editing `/etc/su
 * It keeps custom rules separate from system defaults
 * It's easier to manage and review individual rule files
 * It reduces the risk of syntax errors breaking the entire sudoers configuration
-====
+=====
 
-=== Checking What devuser Can Run
+*Checking What devuser Can Run*
 
 Let's start by checking what sudo privileges devuser has. We can do this using the `sudo -l` command, but we need to switch to the devuser account first.
 
@@ -41,11 +43,11 @@ sudo -l
 ----
 
 [NOTE]
-====
+=====
 The `sudo -l` command lists the commands a user is allowed (and forbidden) to run with sudo. This is extremely useful for security audits.
 
 You should see output showing that devuser can run `/usr/bin/less` as root without a password.
-====
+=====
 
 Let's exit back to the rhel user:
 
@@ -54,7 +56,7 @@ Let's exit back to the rhel user:
 exit
 ----
 
-=== Finding Scott's Sudo Rule
+*Finding Scott's Sudo Rule*
 
 Scott mentioned in his email that he created a rule in `/etc/sudoers.d/`. Let's look there:
 
@@ -71,7 +73,7 @@ sudo cat /etc/sudoers.d/devuser-logs
 ----
 
 [IMPORTANT]
-====
+=====
 **The Vulnerable Configuration:**
 
 ```
@@ -89,13 +91,16 @@ Let's break this down:
 **What Scott intended:** Let devuser view protected log files
 
 **What this actually allows:** Full root shell access!
+=====
 ====
 
-== Understanding the Vulnerability
+.Understanding the Vulnerability
+[%collapsible]
+====
 
-The problem is that `less` is not just a simple file viewer. It's an interactive pager with many features, including the ability to execute shell commands.
+The problem is that `less` is not just a simple file viewer. It's an interactive pager with many feshell commands.
 
-=== Why This Is Dangerous
+*Why This Is Dangerous*
 
 When you run a command with `sudo`, that command runs with root privileges. If that command can spawn a shell or execute other commands, those will ALSO run with root privileges.
 
@@ -116,7 +121,11 @@ The problem is that a lot of Unix tools do way more than their name suggests. Vi
 There's actually a whole catalog of binaries that can be exploited like this - GTFOBins or something like that. Worth looking at before you approve any sudo request.
 ____
 
-== Common Vulnerable Commands
+====
+
+.Common Vulnerable Commands
+[%collapsible]
+====
 
 Other common commands that can be exploited similarly:
 
@@ -127,13 +136,18 @@ Other common commands that can be exploited similarly:
 * **Others**: `man`, `git`, `ftp`, and many more
 
 [IMPORTANT]
-====
+=====
 **Security Principle:**
 
 When granting sudo access, you must understand the FULL capabilities of the command, not just its primary purpose. If a command can execute other commands or spawn a shell, it can be used for privilege escalation.
+=====
+
 ====
 
-== Verification
+.Verification
+[%collapsible]
+====
+
 
 Let's verify this is indeed the rule causing the problem. Check the file permissions and ownership:
 
@@ -147,7 +161,7 @@ The permissions should be `0440` (read-only for root and the sudo group), which 
 Now let's move on to the next module where we'll actually test this vulnerability in a controlled way to understand exactly how it works.
 
 [NOTE]
-====
+=====
 **Why We're Testing:**
 
 You might wonder why we need to test this if we already know it's vulnerable. In real security investigations, you need to:
@@ -158,4 +172,6 @@ You might wonder why we need to test this if we already know it's vulnerable. In
 4. Verify your remediation actually fixes the issue
 
 This is standard practice in security incident response.
+=====
+
 ====
